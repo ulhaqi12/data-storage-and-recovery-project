@@ -1,5 +1,6 @@
 import mysql.connector
 import pandas as pd
+import xml.etree.ElementTree as ET
 
 
 def connect_to_mysql(host="localhost", user="root", password="", database="project"):
@@ -172,3 +173,16 @@ def update_keywords_from_changes_table():
         connection.close()
 
 
+def create_xml(dataframe):
+    root = ET.Element("keywords")
+
+    for index, row in dataframe.iterrows():
+        keyword_element = ET.SubElement(root, "keyword")
+        ET.SubElement(keyword_element, "id").text = str(row["id"])
+        ET.SubElement(keyword_element, "value").text = row["keyword"]
+        ET.SubElement(keyword_element, "occurrence").text = str(row["occurrence"])
+
+    tree = ET.ElementTree(root)
+    xml_content = ET.tostring(root).decode("utf-8")
+
+    return xml_content

@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -5,7 +7,7 @@ import seaborn as sns
 from urls import insert_url_entry, get_url_table_as_dataframe, scrape_all_urls
 from superfluous import insert_word_into_superfluous, get_superfluous_words_as_dataframe
 from keywords import (split_and_store_keywords, get_keywords_as_dataframe,
-                      remove_superfluous_words_from_keywords, update_keywords_from_changes_table)
+                      remove_superfluous_words_from_keywords, update_keywords_from_changes_table, create_xml)
 from changes import insert_changes_into_table, get_changes_table_as_dataframe
 
 
@@ -13,8 +15,8 @@ st.set_page_config(page_title="Storage Project", layout="wide")
 st.header("Storage and Data Recovery Project")
 
 
-url, superfluous, changes, keywords, report, xml, json, csv = st.tabs(["URL", "Superfluous", "Changes", "Keywords",
-                                                                       "Report", "XML", "JSON", "CSV/XLS"])
+url, superfluous, changes, keywords, report, download= st.tabs(["URL", "Superfluous", "Changes", "Keywords",
+                                                                       "Report", "Download Keywords"])
 
 
 with url:
@@ -106,3 +108,44 @@ with report:
     plt.title("Keyword Occurrences")
     plt.xticks(rotation=45, ha="right")
     st.pyplot()
+
+with download:
+    keywords_df = get_keywords_as_dataframe()
+
+    if keywords_df is not None:
+        # Display the download button in Streamlit
+        xml_content = create_xml(keywords_df)
+        st.download_button(
+            label="Download XML",
+            data=xml_content,
+            file_name="keywords.xml",
+            mime="application/xml"
+        )
+    else:
+        st.error("Failed to retrieve data from the 'keywords' table.")
+
+    if keywords_df is not None:
+        # Display the download button in Streamlit
+        json_content = keywords_df.to_json(orient="records", lines=True)
+        st.download_button(
+            label="Download JSON",
+            data=json_content,
+            file_name="keywords.json",
+            mime="application/json"
+        )
+    else:
+        st.error("Failed to retrieve data from the 'keywords' table.")
+
+    if keywords_df is not None:
+        # Display the download button in Streamlit
+        xls_content = keywords_df.to_csv(index=False)
+        st.download_button(
+            label="Download CSV",
+            data=xls_content,
+            file_name="keywords.csv",
+            key="download_csv"
+        )
+    else:
+        st.error("Failed to retrieve data from the 'keywords' table.")
+
+
