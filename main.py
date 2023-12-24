@@ -1,8 +1,11 @@
 import streamlit as st
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from urls import insert_url_entry, get_url_table_as_dataframe, scrape_all_urls
 from superfluous import insert_word_into_superfluous, get_superfluous_words_as_dataframe
-from keywords import split_and_store_keywords, get_keywords_as_dataframe
+from keywords import (split_and_store_keywords, get_keywords_as_dataframe,
+                      remove_superfluous_words_from_keywords, update_keywords_from_changes_table)
 from changes import insert_changes_into_table, get_changes_table_as_dataframe
 
 
@@ -15,15 +18,19 @@ url, superfluous, changes, keywords, report, xml, json, csv = st.tabs(["URL", "S
 
 
 with url:
-    scrape_button = st.button("Scrape")
+    col1, col2 = st.columns(2)
+    with col1:
+        scrape_button = st.button("Scrape")
 
-    if scrape_button:
-        scrape_all_urls()
+        if scrape_button:
+            scrape_all_urls()
 
-    split_button = st.button("Split")
+    with col2:
 
-    if split_button:
-        split_and_store_keywords()
+        split_button = st.button("Split")
+
+        if split_button:
+            split_and_store_keywords()
 
     with st.form("New URL"):
         url = st.text_input("Add New URL")
@@ -57,6 +64,11 @@ with superfluous:
 
 
 with keywords:
+    clean_button = st.button("Clean")
+
+    if clean_button:
+        remove_superfluous_words_from_keywords()
+        update_keywords_from_changes_table()
 
     with st.form("Keywords"):
         col1, col2 = st.columns(2)
@@ -84,3 +96,13 @@ with changes:
     st.dataframe(changes_df, width=500)
 
 
+with report:
+    keyword_df_report = get_keywords_as_dataframe()
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+    plt.figure(figsize=(20, 6))
+    sns.barplot(x="keyword", y="occurrence", data=keyword_df_report, palette="viridis")
+    plt.xlabel("Keyword")
+    plt.ylabel("Occurrences")
+    plt.title("Keyword Occurrences")
+    plt.xticks(rotation=45, ha="right")
+    st.pyplot()
